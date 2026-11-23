@@ -25,6 +25,8 @@
       .no-print { display: none !important; }
       .print-only { display: block !important; }
       body.print-mode-ba-rtl .print-full-only { display: none !important; }
+      body.print-mode-snp8 .print-supervisi-only { display: none !important; }
+      body:not(.print-mode-snp8) .print-snp8-only { display: none !important; }
       .page-break { page-break-before: always; }
       body { background: #fff !important; color: #000 !important; font-size: 10pt; }
     }
@@ -791,19 +793,25 @@
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
           <div class="flex flex-wrap justify-between items-start gap-3 border-b pb-4">
             <div>
-              <span class="text-[11px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-2.5 py-1 rounded-full">SI-ADMIN KS • 8 Standar Nasional Pendidikan (82 Indikator Operasional)</span>
+              <span class="text-[11px] font-bold uppercase tracking-wider bg-teal-100 text-teal-800 px-2.5 py-1 rounded-full">SI-ADMIN KS • 8 Standar Nasional Pendidikan (<span id="snp8HeaderCount">82</span> Indikator Operasional)</span>
               <h2 class="text-lg font-bold text-slate-800 mt-1.5">Indikator Pelaksanaan Tugas Kepala Sekolah (8 SNP)</h2>
               <p class="text-xs text-slate-500">Perencanaan, pelaksanaan, pemantauan, evaluasi, dan tindak lanjut program SD Negeri 2 Mootilango berbasis 8 SNP.</p>
             </div>
             <div class="flex flex-wrap gap-2 text-xs">
+              <button onclick="openSnp8AddModal()" class="bg-teal-700 hover:bg-teal-800 text-white px-3 py-2 rounded-lg font-bold shadow flex items-center gap-1.5">
+                <i class="fa-solid fa-plus"></i> Tambah Indikator
+              </button>
+              <button onclick="printSnp8Report()" class="bg-rose-700 hover:bg-rose-800 text-white px-3 py-2 rounded-lg font-semibold shadow flex items-center gap-1.5">
+                <i class="fa-solid fa-print"></i> Cetak PDF Resmi
+              </button>
               <button onclick="exportSnp8Word()" class="bg-blue-700 hover:bg-blue-800 text-white px-3 py-2 rounded-lg font-semibold shadow flex items-center gap-1.5">
-                <i class="fa-solid fa-file-word"></i> Ekspor Word
+                <i class="fa-solid fa-file-word"></i> Word
               </button>
               <button onclick="exportSnp8Excel()" class="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-2 rounded-lg font-semibold shadow flex items-center gap-1.5">
-                <i class="fa-solid fa-file-excel"></i> Ekspor Excel
+                <i class="fa-solid fa-file-excel"></i> Excel
               </button>
               <button onclick="generateSnp8AiSummary()" class="bg-indigo-700 hover:bg-indigo-800 text-white px-3 py-2 rounded-lg font-semibold shadow flex items-center gap-1.5">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Ringkasan Evaluasi Otomatis
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Analisis Otomatis
               </button>
             </div>
           </div>
@@ -974,12 +982,22 @@
             <div>
               <label class="block font-bold text-slate-700 mb-1">Uraian / Catatan Pelaksanaan & Unggah Nama File Bukti:</label>
               <textarea id="snp8EditUraian" rows="2" placeholder="Tuliskan catatan pelaksanaan real di sekolah..." class="w-full p-2 border rounded-lg bg-white"></textarea>
-              <div class="mt-1.5 flex flex-wrap items-center gap-2">
-                <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 border border-slate-300 px-2.5 py-1 rounded-lg font-semibold text-[11px] flex items-center gap-1.5">
-                  <i class="fa-solid fa-paperclip text-teal-700"></i> Pilih File Bukti (PDF/Foto/Dokumen)
-                  <input type="file" class="hidden" onchange="attachSnp8FileName(event)" />
-                </label>
-                <span id="snp8AttachedFileLabel" class="text-[11px] font-mono text-teal-800"></span>
+              <div class="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2.5 bg-teal-50/50 p-2.5 rounded-lg border border-teal-200">
+                <div>
+                  <label class="block font-bold text-teal-950 mb-1"><i class="fa-solid fa-link mr-1"></i> Tautan Bukti Digital (Google Drive / Cloud URL):</label>
+                  <input type="url" id="snp8EditLinkBukti" placeholder="https://drive.google.com/file/d/..." class="w-full p-1.5 border rounded-lg bg-white text-xs" />
+                </div>
+                <div>
+                  <label class="block font-bold text-teal-950 mb-1"><i class="fa-solid fa-paperclip mr-1"></i> Unggah Lampiran Lokal (PDF / Foto maks 1.5MB):</label>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <label class="cursor-pointer bg-white hover:bg-slate-100 border border-slate-300 px-2.5 py-1.5 rounded-lg font-semibold text-[11px] flex items-center gap-1.5 shadow-sm">
+                      <i class="fa-solid fa-upload text-teal-700"></i> Pilih File Bukti
+                      <input type="file" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx" class="hidden" onchange="attachSnp8FileName(event)" />
+                    </label>
+                    <button type="button" id="btnClearSnp8File" onclick="clearSnp8AttachedFile()" class="hidden text-[10px] text-rose-600 hover:underline font-semibold">Hapus Lampiran</button>
+                  </div>
+                  <span id="snp8AttachedFileLabel" class="block text-[11px] font-mono text-teal-800 mt-1 truncate"></span>
+                </div>
               </div>
             </div>
 
@@ -1002,6 +1020,82 @@
               <button type="button" onclick="closeSnp8Modal()" class="px-4 py-2 border rounded-lg font-semibold">Batal</button>
               <button type="submit" class="bg-teal-700 hover:bg-teal-800 text-white px-5 py-2 rounded-lg font-bold shadow">
                 <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Data Indikator
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL TAMBAH INDIKATOR KUSTOM 8 SNP -->
+      <div id="snp8AddModal" class="fixed inset-0 bg-slate-900/75 hidden items-center justify-center z-50 p-3 sm:p-6 no-print">
+        <div class="bg-white rounded-2xl max-w-2xl w-full flex flex-col shadow-2xl overflow-hidden">
+          <div class="px-5 py-3.5 bg-teal-900 text-white flex items-center justify-between">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider bg-teal-700 px-2 py-0.5 rounded">Indikator Kustom Kepala Sekolah</span>
+              <h3 class="text-sm font-bold mt-1">Tambah Indikator Pelaksanaan Tugas 8 SNP</h3>
+            </div>
+            <button onclick="closeSnp8AddModal()" class="p-1.5 rounded-lg hover:bg-teal-800 text-teal-100"><i class="fa-solid fa-xmark text-lg"></i></button>
+          </div>
+          <form onsubmit="saveNewSnp8Indicator(event)" class="p-5 space-y-3 text-xs">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Pilih Standar Nasional Pendidikan (8 SNP):</label>
+                <select id="snp8NewStd" onchange="suggestNextSnp8Code()" required class="w-full p-2 border rounded-lg bg-white font-semibold">
+                  <option value="1. Standar Kompetensi Lulusan">1. Standar Kompetensi Lulusan</option>
+                  <option value="2. Standar Isi">2. Standar Isi</option>
+                  <option value="3. Standar Proses">3. Standar Proses</option>
+                  <option value="4. Standar Penilaian Pendidikan">4. Standar Penilaian Pendidikan</option>
+                  <option value="5. Standar Tenaga Kependidikan">5. Standar Tenaga Kependidikan</option>
+                  <option value="6. Standar Sarana dan Prasarana">6. Standar Sarana dan Prasarana</option>
+                  <option value="7. Standar Pengelolaan">7. Standar Pengelolaan</option>
+                  <option value="8. Standar Pembiayaan">8. Standar Pembiayaan</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Kode Indikator (Otomatis / Dapat Diedit):</label>
+                <input type="text" id="snp8NewKode" required placeholder="Misal: SKL-11" class="w-full p-2 border rounded-lg bg-slate-50 font-mono font-bold text-teal-900" />
+              </div>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Uraian Indikator / Kegiatan Kepala Sekolah:</label>
+              <input type="text" id="snp8NewKegiatan" required placeholder="Contoh: Melaksanakan program Gerakan Sekolah Sehat & Literasi Digital..." class="w-full p-2 border rounded-lg bg-white" />
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Tujuan / Target Pencapaian:</label>
+              <input type="text" id="snp8NewTarget" required placeholder="Contoh: Terwujudnya lingkungan belajar sehat dan ramah anak..." class="w-full p-2 border rounded-lg bg-white" />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Penanggung Jawab:</label>
+                <input type="text" id="snp8NewPj" value="Kepala Sekolah & Tim Sekolah" required class="w-full p-2 border rounded-lg bg-white" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Jadwal / Periode:</label>
+                <input type="text" id="snp8NewJadwal" value="Semester 1 & 2" required class="w-full p-2 border rounded-lg bg-white" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Semester:</label>
+                <select id="snp8NewSem" class="w-full p-2 border rounded-lg bg-white font-semibold">
+                  <option value="Semester 1 & 2">Semester 1 & 2</option>
+                  <option value="Semester 1">Semester 1</option>
+                  <option value="Semester 2">Semester 2</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nama Dokumen Bukti Fisik:</label>
+                <input type="text" id="snp8NewBukti" required placeholder="Misal: SK Tim & Laporan Kegiatan" class="w-full p-2 border rounded-lg bg-white" />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Tautan Google Drive / Bukti Digital (Opsional):</label>
+                <input type="url" id="snp8NewLink" placeholder="https://drive.google.com/..." class="w-full p-2 border rounded-lg bg-white" />
+              </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2 border-t">
+              <button type="button" onclick="closeSnp8AddModal()" class="px-4 py-2 border rounded-lg font-semibold">Batal</button>
+              <button type="submit" class="bg-teal-700 hover:bg-teal-800 text-white px-5 py-2 rounded-lg font-bold shadow">
+                <i class="fa-solid fa-plus mr-1"></i> Tambahkan Indikator
               </button>
             </div>
           </form>
@@ -1375,7 +1469,8 @@
             <tr class="border-b border-slate-300"><td class="p-2 font-bold bg-slate-50">Status Pelaksanaan</td><td class="p-2 font-bold text-emerald-700" id="docStatus">Selesai</td></tr>
             <tr><td class="p-2 font-bold bg-slate-50">Nama Berkas</td><td class="p-2 font-mono" id="docFileName">DOK.pdf</td></tr>
           </table>
-          <p class="text-xs text-slate-600">Lembar verifikasi otomatis SIMANTAP-2M v3.0. Gunakan tombol <strong>Buka PDF</strong> di header untuk membaca file PDF asli dari perangkat Anda.</p>
+          <div id="docProofExtraBox" class="hidden space-y-2 border-t pt-3"></div>
+          <p class="text-xs text-slate-600">Lembar verifikasi otomatis SIMANTAP-2M v3.1. Gunakan tombol <strong>Buka PDF</strong> di header untuk membaca file PDF asli dari perangkat Anda.</p>
           <div class="pt-8 flex justify-end">
             <div class="text-center text-xs w-56">
               <p>Kepala SD Negeri 2 Mootilango,</p><div class="h-14"></div>
@@ -1387,8 +1482,51 @@
     </div>
   </div>
 
-  <!-- ==================== PRINT ONLY: DOKUMEN SUPERVISI COACHING, PKG & BERITA ACARA RTL ==================== -->
+  <!-- ==================== PRINT ONLY: DOKUMEN SUPERVISI COACHING, PKG & LAPORAN 8 SNP ==================== -->
   <div class="print-only p-4 space-y-6">
+    <!-- CETAK KHUSUS LAPORAN RESMI 8 SNP -->
+    <div class="print-snp8-only space-y-4">
+      <div class="border-b-2 border-black pb-2 text-center">
+        <p class="text-[11px] font-bold uppercase">PEMERINTAH KABUPATEN GORONTALO • DINAS PENDIDIKAN DAN KEBUDAYAAN</p>
+        <p class="text-sm font-extrabold uppercase">SD NEGERI 2 MOOTILANGO</p>
+        <p class="text-[10px]">Alamat: Jl. Bendungan, Desa Helumo, Kec. Mootilango, Kab. Gorontalo • NPSN: 40500670</p>
+        <h1 class="text-xs font-bold uppercase underline mt-1.5">LAPORAN PELAKSANAAN TUGAS KEPALA SEKOLAH BERDASARKAN 8 STANDAR NASIONAL PENDIDIKAN (SNP)</h1>
+        <p class="text-[10px]">Tahun Pelajaran 2026/2027 • Filter Aktif: <span id="printSnp8FilterLabel">Semua Standar</span></p>
+      </div>
+      <div id="printSnp8SummaryStrip" class="text-[10px] border border-black p-2 bg-gray-100 font-semibold"></div>
+      <table class="w-full text-[9.5pt] border-collapse border border-black">
+        <thead>
+          <tr class="bg-gray-200 font-bold text-center">
+            <th class="p-1 border border-black w-8">No</th>
+            <th class="p-1 border border-black w-16">Kode</th>
+            <th class="p-1 border border-black text-left">Standar & Indikator Tugas Kepala Sekolah</th>
+            <th class="p-1 border border-black w-28">PJ & Periode</th>
+            <th class="p-1 border border-black w-24">Status</th>
+            <th class="p-1 border border-black w-32 text-left">Bukti Fisik</th>
+            <th class="p-1 border border-black text-left">Catatan Pelaksanaan / Monev / RTL</th>
+          </tr>
+        </thead>
+        <tbody id="printSnp8TableBody"></tbody>
+      </table>
+      <div class="grid grid-cols-2 gap-8 pt-6 text-center text-xs">
+        <div>
+          <p>Mengetahui,</p>
+          <p class="font-semibold">Pengawas Bina SD Negeri 2 Mootilango,</p>
+          <div class="h-16"></div>
+          <p class="font-bold underline">Reti Abdullah, S.Pd, M.Pd</p>
+          <p>NIP. 196808031992082002</p>
+        </div>
+        <div>
+          <p>Mootilango, November 2026</p>
+          <p class="font-semibold">Kepala SD Negeri 2 Mootilango,</p>
+          <div class="h-16"></div>
+          <p class="font-bold underline">Tomas Pakaya, S.Pd, M.Pd</p>
+          <p>NIP. 198501092010011003</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="print-supervisi-only space-y-6">
     <div class="print-full-only space-y-6">
     <!-- HALAMAN 1: PRA-OBSERVASI -->
     <div class="border-b-2 border-black pb-2 mb-3 text-center">
@@ -1531,6 +1669,7 @@
       <div><p>Pengawas Bina</p><div class="h-14"></div><p class="font-bold underline">Reti Abdullah, S.Pd., M.Pd.</p><p>NIP. 196808031992082002</p></div>
       <div><p>Guru yang Disupervisi</p><div class="h-14"></div><p class="font-bold underline pr-guru"></p><p>NIP. <span class="pr-nip-guru"></span></p></div>
       <div><p>Mengetahui,<br>Kepala SD Negeri 2 Mootilango</p><div class="h-14"></div><p class="font-bold underline">Tomas Pakaya, S.Pd., M.Pd.</p><p>NIP. 198501092010011003</p></div>
+    </div>
     </div>
   </div>
 
@@ -2764,7 +2903,7 @@
       document.getElementById('dashboardSummary').innerHTML = `
         ${canSup ? `<div class="flex justify-between p-2 bg-slate-50 rounded"><span>Rekap Supervisi Coaching & PKG (74 Indikator):</span><strong>${sessions.length} Guru</strong></div>` : ''}
         ${canMatriks ? `<div class="flex justify-between p-2 bg-slate-50 rounded"><span>Matriks Agenda Kepala Sekolah (2 Semester):</span><strong>${appData.matriksKs.length} Program</strong></div>` : ''}
-        <div class="flex justify-between p-2 bg-teal-50/70 rounded"><span>Indikator Tugas Kepala Sekolah (8 SNP):</span><strong>${SNP8_MASTER_LIST.filter(x => appData.snp8Records && appData.snp8Records[x.kode]?.status === 'Selesai').length} / ${SNP8_MASTER_LIST.length} Indikator Selesai</strong></div>
+        <div class="flex justify-between p-2 bg-teal-50/70 rounded"><span>Indikator Tugas Kepala Sekolah (8 SNP):</span><strong>${getAllSnp8List().filter(x => appData.snp8Records && appData.snp8Records[x.kode]?.status === 'Selesai').length} / ${getAllSnp8List().length} Indikator Selesai</strong></div>
         <div class="flex justify-between p-2 bg-slate-50 rounded"><span>Pemantauan Pembelajaran KBM:</span><strong>${appData.pembelajaran.length} Catatan</strong></div>
         <div class="flex justify-between p-2 bg-slate-50 rounded"><span>Layanan Kesiswaan & Remedial TKA:</span><strong>${appData.kesiswaan.length} Program</strong></div>
         <div class="flex justify-between p-2 bg-slate-50 rounded"><span>Agenda Sekolah & Sarpras:</span><strong>${appData.agenda.length} Kegiatan • ${appData.sarpras.length} Aset</strong></div>
@@ -2793,7 +2932,7 @@
             ${(() => {
               initSnp8Records();
               const grp = {};
-              SNP8_MASTER_LIST.forEach(it => {
+              getAllSnp8List().forEach(it => {
                 if (!grp[it.std]) grp[it.std] = { tot: 0, sel: 0, pro: 0, rtl: 0 };
                 grp[it.std].tot++;
                 const st = appData.snp8Records[it.kode].status;
@@ -2980,9 +3119,15 @@
       { kode: "SPB-10", std: "8. Standar Pembiayaan", tujuanStd: "Memastikan pengelolaan anggaran sekolah berjalan sesuai kebutuhan, ketentuan, serta prinsip transparansi dan akuntabel.", kegiatan: "Menjamin transparansi pengelolaan keuangan sekolah.", bukti: "Dokumentasi papan informasi RKAS & rapat komite", pj: "Kepala Sekolah & Komite", jadwal: "Per Semester", semester: "Semester 1 & 2" }
     ];
 
+    function getAllSnp8List() {
+      const custom = Array.isArray(appData.snp8CustomList) ? appData.snp8CustomList : [];
+      return [...SNP8_MASTER_LIST, ...custom];
+    }
+
     function initSnp8Records() {
       if (!appData.snp8Records) appData.snp8Records = {};
-      SNP8_MASTER_LIST.forEach(item => {
+      if (!Array.isArray(appData.snp8CustomList)) appData.snp8CustomList = [];
+      getAllSnp8List().forEach(item => {
         if (!appData.snp8Records[item.kode]) {
           let initStatus = "Belum Dilaksanakan";
           let initTgl = "";
@@ -3037,12 +3182,15 @@
       }
     }
 
+    let pendingSnp8FileData = null;
+
     function openSnp8Modal(kode) {
       initSnp8Records();
-      const master = SNP8_MASTER_LIST.find(x => x.kode === kode);
+      const master = getAllSnp8List().find(x => x.kode === kode);
       const rec = appData.snp8Records[kode];
       if (!master || !rec) return;
 
+      pendingSnp8FileData = null;
       document.getElementById('snp8EditKode').value = kode;
       document.getElementById('snp8ModalCode').innerText = kode;
       document.getElementById('snp8ModalTitle').innerText = master.kegiatan;
@@ -3057,7 +3205,16 @@
       document.getElementById('snp8EditBukti').value = rec.bukti || master.bukti;
       document.getElementById('snp8EditTarget').value = rec.target || master.tujuanStd;
       document.getElementById('snp8EditUraian').value = rec.uraian || '';
-      document.getElementById('snp8AttachedFileLabel').innerText = rec.lampiranFile ? ('File terlampir: ' + rec.lampiranFile) : '';
+      document.getElementById('snp8EditLinkBukti').value = rec.linkBukti || '';
+      const lbl = document.getElementById('snp8AttachedFileLabel');
+      const clrBtn = document.getElementById('btnClearSnp8File');
+      if (rec.lampiranFile) {
+        lbl.innerText = 'File terlampir: ' + rec.lampiranFile + (rec.lampiranData ? ' (Tersimpan Permanen)' : '');
+        clrBtn.classList.remove('hidden');
+      } else {
+        lbl.innerText = '';
+        clrBtn.classList.add('hidden');
+      }
       document.getElementById('snp8EditMonev').value = rec.monev || '';
       document.getElementById('snp8EditEvaluasi').value = rec.evaluasi || '';
       document.getElementById('snp8EditRtl').value = rec.rtl || '';
@@ -3071,12 +3228,37 @@
       m.classList.add('hidden'); m.classList.remove('flex');
     }
 
+    function clearSnp8AttachedFile() {
+      const kode = document.getElementById('snp8EditKode').value;
+      const rec = appData.snp8Records[kode];
+      if (rec) {
+        rec.lampiranFile = '';
+        rec.lampiranData = '';
+      }
+      pendingSnp8FileData = null;
+      document.getElementById('snp8AttachedFileLabel').innerText = '';
+      document.getElementById('btnClearSnp8File').classList.add('hidden');
+    }
+
     function attachSnp8FileName(e) {
       const f = e.target.files[0];
-      if (f) {
-        document.getElementById('snp8AttachedFileLabel').innerText = 'File terlampir: ' + f.name;
-        document.getElementById('snp8AttachedFileLabel').dataset.filename = f.name;
+      if (!f) return;
+      const lbl = document.getElementById('snp8AttachedFileLabel');
+      const clrBtn = document.getElementById('btnClearSnp8File');
+      if (f.size > 1.5 * 1024 * 1024) {
+        alert('Ukuran file melebihi 1,5 MB. Hanya nama file yang dicatat; untuk file besar disarankan menempelkan tautan Google Drive pada kolom di sebelah kiri.');
+        pendingSnp8FileData = { name: f.name, dataUrl: '' };
+        lbl.innerText = 'Nama file dicatat: ' + f.name;
+        clrBtn.classList.remove('hidden');
+        return;
       }
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        pendingSnp8FileData = { name: f.name, dataUrl: ev.target.result };
+        lbl.innerText = 'Siap disimpan: ' + f.name + ' (' + Math.round(f.size / 1024) + ' KB)';
+        clrBtn.classList.remove('hidden');
+      };
+      reader.readAsDataURL(f);
     }
 
     function saveSnp8Detail(e) {
@@ -3094,10 +3276,11 @@
       rec.bukti = document.getElementById('snp8EditBukti').value;
       rec.target = document.getElementById('snp8EditTarget').value;
       rec.uraian = document.getElementById('snp8EditUraian').value;
-      const attached = document.getElementById('snp8AttachedFileLabel').dataset.filename;
-      if (attached) {
-        rec.lampiranFile = attached;
-        delete document.getElementById('snp8AttachedFileLabel').dataset.filename;
+      rec.linkBukti = document.getElementById('snp8EditLinkBukti').value.trim();
+      if (pendingSnp8FileData) {
+        rec.lampiranFile = pendingSnp8FileData.name;
+        rec.lampiranData = pendingSnp8FileData.dataUrl || '';
+        pendingSnp8FileData = null;
       }
       rec.monev = document.getElementById('snp8EditMonev').value;
       rec.evaluasi = document.getElementById('snp8EditEvaluasi').value;
@@ -3107,12 +3290,29 @@
       saveData();
     }
 
-    function openSnp8ProofPreview(kode) {
+    async function openSnp8ProofPreview(kode) {
       initSnp8Records();
-      const master = SNP8_MASTER_LIST.find(x => x.kode === kode);
+      const master = getAllSnp8List().find(x => x.kode === kode);
       const rec = appData.snp8Records[kode];
       if (!master || !rec) return;
+
+      const m = document.getElementById('pdfModal');
+      m.classList.remove('hidden'); m.classList.add('flex');
       document.getElementById('pdfModalTitle').innerText = rec.lampiranFile || (kode + '_' + master.bukti.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf');
+
+      // If embedded PDF DataURL exists, render directly in native PDF viewer!
+      if (rec.lampiranData && rec.lampiranData.startsWith('data:application/pdf') && window.pdfjsLib) {
+        document.getElementById('pdfSimulatedDoc').classList.add('hidden');
+        const canvas = document.getElementById('pdfRenderCanvas');
+        canvas.classList.remove('hidden');
+        const ctrl = document.getElementById('pdfCanvasControls');
+        ctrl.classList.remove('hidden'); ctrl.classList.add('flex');
+        currentPdfDoc = await pdfjsLib.getDocument(rec.lampiranData).promise;
+        currentPdfPage = 1;
+        await renderPdfPage(currentPdfPage);
+        return;
+      }
+
       document.getElementById('pdfRenderCanvas').classList.add('hidden');
       document.getElementById('pdfCanvasControls').classList.add('hidden');
       document.getElementById('pdfSimulatedDoc').classList.remove('hidden');
@@ -3121,17 +3321,162 @@
       document.getElementById('docCat').innerText = `${master.std} • PJ: ${rec.pj}`;
       document.getElementById('docStatus').innerText = `${rec.status}${rec.tglRealisasi ? ' (Realisasi: ' + rec.tglRealisasi + ')' : ''}`;
       document.getElementById('docFileName').innerText = rec.lampiranFile || rec.bukti;
-      const m = document.getElementById('pdfModal');
+
+      const extraBox = document.getElementById('docProofExtraBox');
+      let extraHtml = '';
+      if (rec.lampiranData && rec.lampiranData.startsWith('data:image/')) {
+        extraHtml += `<div class="border rounded-lg p-2 bg-slate-50"><p class="text-[11px] font-bold text-slate-700 mb-1">Lampiran Foto Bukti Fisik:</p><img src="${rec.lampiranData}" alt="Bukti Fisik" class="max-h-72 mx-auto rounded shadow" /></div>`;
+      } else if (rec.lampiranData) {
+        extraHtml += `<div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-between"><span class="text-xs font-semibold text-emerald-900">Berkas Lampiran Tersimpan (${rec.lampiranFile})</span><a href="${rec.lampiranData}" download="${rec.lampiranFile}" class="bg-emerald-700 text-white px-3 py-1 rounded text-xs font-bold">Unduh Berkas</a></div>`;
+      }
+      if (rec.linkBukti) {
+        extraHtml += `<div class="p-2.5 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-between gap-2"><span class="text-xs font-semibold text-blue-950 truncate"><i class="fa-solid fa-cloud mr-1"></i> Tautan Bukti Digital: ${rec.linkBukti}</span><a href="${rec.linkBukti}" target="_blank" rel="noopener noreferrer" class="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-xs font-bold shrink-0">Buka Tautan ↗</a></div>`;
+      }
+      if (extraHtml) {
+        extraBox.innerHTML = extraHtml;
+        extraBox.classList.remove('hidden');
+      } else {
+        extraBox.innerHTML = '';
+        extraBox.classList.add('hidden');
+      }
+    }
+
+    function openSnp8AddModal() {
+      suggestNextSnp8Code();
+      const m = document.getElementById('snp8AddModal');
       m.classList.remove('hidden'); m.classList.add('flex');
+    }
+
+    function closeSnp8AddModal() {
+      const m = document.getElementById('snp8AddModal');
+      m.classList.add('hidden'); m.classList.remove('flex');
+    }
+
+    function suggestNextSnp8Code() {
+      const std = document.getElementById('snp8NewStd').value;
+      const prefixMap = {
+        "1. Standar Kompetensi Lulusan": "SKL",
+        "2. Standar Isi": "SI",
+        "3. Standar Proses": "SP",
+        "4. Standar Penilaian Pendidikan": "SPN",
+        "5. Standar Tenaga Kependidikan": "STK",
+        "6. Standar Sarana dan Prasarana": "SSP",
+        "7. Standar Pengelolaan": "SPL",
+        "8. Standar Pembiayaan": "SPB"
+      };
+      const prefix = prefixMap[std] || "IND";
+      const existing = getAllSnp8List().filter(x => x.kode.startsWith(prefix + "-"));
+      const nextNum = String(existing.length + 1).padStart(2, '0');
+      document.getElementById('snp8NewKode').value = `${prefix}-${nextNum}`;
+    }
+
+    function saveNewSnp8Indicator(e) {
+      e.preventDefault();
+      initSnp8Records();
+      const kode = document.getElementById('snp8NewKode').value.trim().toUpperCase();
+      if (getAllSnp8List().some(x => x.kode === kode)) {
+        alert('Kode indikator "' + kode + '" sudah digunakan. Silakan gunakan kode lain.');
+        return;
+      }
+      const std = document.getElementById('snp8NewStd').value;
+      const kegiatan = document.getElementById('snp8NewKegiatan').value.trim();
+      const target = document.getElementById('snp8NewTarget').value.trim();
+      const pj = document.getElementById('snp8NewPj').value.trim();
+      const jadwal = document.getElementById('snp8NewJadwal').value.trim();
+      const semester = document.getElementById('snp8NewSem').value;
+      const bukti = document.getElementById('snp8NewBukti').value.trim();
+      const linkBukti = document.getElementById('snp8NewLink').value.trim();
+
+      appData.snp8CustomList.push({
+        kode, std, tujuanStd: target, kegiatan, bukti, pj, jadwal, semester, isCustom: true
+      });
+      appData.snp8Records[kode] = {
+        kode, target, pj, jadwal,
+        status: "Belum Dilaksanakan",
+        tglRealisasi: "",
+        uraian: "",
+        bukti,
+        linkBukti,
+        lampiranFile: "",
+        lampiranData: "",
+        monev: "",
+        evaluasi: "",
+        rtl: "",
+        semester
+      };
+      e.target.reset();
+      closeSnp8AddModal();
+      saveData();
+      alert('Indikator kustom "' + kode + '" berhasil ditambahkan ke daftar 8 SNP!');
+    }
+
+    function deleteCustomSnp8(kode) {
+      if (!confirm('Hapus indikator kustom "' + kode + '" ini?')) return;
+      appData.snp8CustomList = (appData.snp8CustomList || []).filter(x => x.kode !== kode);
+      if (appData.snp8Records) delete appData.snp8Records[kode];
+      saveData();
+    }
+
+    function printSnp8Report() {
+      initSnp8Records();
+      const fStd = document.getElementById('filterSnp8Std').value;
+      const fStatus = document.getElementById('filterSnp8Status').value;
+      const fSem = document.getElementById('filterSnp8Sem').value;
+      const q = (document.getElementById('searchSnp8Input').value || '').toLowerCase().trim();
+
+      const filtered = getAllSnp8List().filter(item => {
+        const rec = appData.snp8Records[item.kode];
+        if (fStd !== 'ALL' && item.std !== fStd) return false;
+        if (fStatus === 'UNFINISHED' && rec.status === 'Selesai') return false;
+        if (fStatus !== 'ALL' && fStatus !== 'UNFINISHED' && rec.status !== fStatus) return false;
+        if (fSem !== 'ALL' && rec.semester !== fSem) return false;
+        if (q) {
+          const hay = `${item.kode} ${item.std} ${item.kegiatan} ${rec.bukti} ${rec.pj} ${rec.uraian}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      const total = getAllSnp8List().length;
+      const selesai = getAllSnp8List().filter(x => appData.snp8Records[x.kode].status === 'Selesai').length;
+      const proses = getAllSnp8List().filter(x => appData.snp8Records[x.kode].status === 'Dalam Proses').length;
+      const rtl = getAllSnp8List().filter(x => appData.snp8Records[x.kode].status === 'Perlu Tindak Lanjut').length;
+      const pct = total ? ((selesai / total) * 100).toFixed(1) : '0.0';
+
+      document.getElementById('printSnp8FilterLabel').innerText = `${fStd === 'ALL' ? 'Semua 8 Standar' : fStd} • Status: ${fStatus === 'ALL' ? 'Semua' : fStatus} • Semester: ${fSem === 'ALL' ? '1 & 2' : fSem}`;
+      document.getElementById('printSnp8SummaryStrip').innerText = `Ringkasan Capaian 8 SNP SD Negeri 2 Mootilango: Total ${total} Indikator | Selesai: ${selesai} (${pct}%) | Dalam Proses: ${proses} | Perlu Tindak Lanjut: ${rtl} | Dicetak: ${filtered.length} Baris`;
+
+      document.getElementById('printSnp8TableBody').innerHTML = filtered.map((item, i) => {
+        const r = appData.snp8Records[item.kode];
+        const notes = [
+          r.uraian ? `Pelaksanaan: ${r.uraian}` : '',
+          r.monev ? `Monev: ${r.monev}` : '',
+          r.evaluasi ? `Evaluasi: ${r.evaluasi}` : '',
+          r.rtl ? `RTL: ${r.rtl}` : ''
+        ].filter(Boolean).join(' | ') || '-';
+        return `<tr>
+          <td class="p-1 border border-black text-center">${i + 1}</td>
+          <td class="p-1 border border-black font-mono font-bold text-center">${item.kode}</td>
+          <td class="p-1 border border-black"><div class="text-[8pt] font-bold">${item.std}</div><div>${item.kegiatan}</div></td>
+          <td class="p-1 border border-black text-[8.5pt]">${r.pj}<br><em>${r.jadwal}</em></td>
+          <td class="p-1 border border-black text-center font-bold">${r.status}${r.tglRealisasi ? '<br><span class="font-normal text-[8pt]">(' + r.tglRealisasi + ')</span>' : ''}</td>
+          <td class="p-1 border border-black text-[8.5pt]">${r.lampiranFile || r.bukti}${r.linkBukti ? '<br>[Tautan Drive]' : ''}</td>
+          <td class="p-1 border border-black text-[8.5pt]">${notes}</td>
+        </tr>`;
+      }).join('');
+
+      document.body.classList.add('print-mode-snp8');
+      window.print();
+      setTimeout(() => document.body.classList.remove('print-mode-snp8'), 500);
     }
 
     function renderSnp8() {
       initSnp8Records();
-      const total = SNP8_MASTER_LIST.length;
+      const total = getAllSnp8List().length;
       let cntSelesai = 0, cntProses = 0, cntRtl = 0, cntBelum = 0;
 
       const stdStats = {};
-      SNP8_MASTER_LIST.forEach(item => {
+      getAllSnp8List().forEach(item => {
         const rec = appData.snp8Records[item.kode];
         if (!stdStats[item.std]) stdStats[item.std] = { total: 0, selesai: 0, proses: 0, rtl: 0, belum: 0 };
         stdStats[item.std].total++;
@@ -3152,6 +3497,7 @@
       if (dashCnt) dashCnt.innerText = `${cntSelesai}/${total} Selesai`;
 
       document.getElementById('snp8StatTotal').innerText = total;
+      const hdrCnt = document.getElementById('snp8HeaderCount'); if (hdrCnt) hdrCnt.innerText = total;
       document.getElementById('snp8StatSelesai').innerText = cntSelesai;
       document.getElementById('snp8StatPct').innerText = `${pctTotal}% Capaian Selesai`;
       document.getElementById('snp8StatProses').innerText = cntProses;
@@ -3178,7 +3524,7 @@
       const fSem = document.getElementById('filterSnp8Sem').value;
       const q = (document.getElementById('searchSnp8Input').value || '').toLowerCase().trim();
 
-      const filtered = SNP8_MASTER_LIST.filter(item => {
+      const filtered = getAllSnp8List().filter(item => {
         const rec = appData.snp8Records[item.kode];
         if (fStd !== 'ALL' && item.std !== fStd) return false;
         if (fStatus === 'UNFINISHED' && rec.status === 'Selesai') return false;
@@ -3225,16 +3571,18 @@
               <option value="Perlu Tindak Lanjut" ${rec.status==='Perlu Tindak Lanjut'?'selected':''}>Perlu Tindak Lanjut</option>
             </select>
           </td>
-          <td class="p-2.5">
-            <button onclick="openSnp8ProofPreview('${item.kode}')" class="text-left px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-800 font-semibold text-[11px] flex items-start gap-1">
+          <td class="p-2.5 space-y-1">
+            <button onclick="openSnp8ProofPreview('${item.kode}')" class="w-full text-left px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-800 font-semibold text-[11px] flex items-start gap-1">
               <i class="fa-solid fa-file-pdf mt-0.5 shrink-0"></i>
-              <span>${rec.lampiranFile || rec.bukti}</span>
+              <span>${rec.lampiranFile || rec.bukti}${rec.lampiranData ? ' ✓' : ''}</span>
             </button>
+            ${rec.linkBukti ? `<a href="${rec.linkBukti}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-[10px]"><i class="fa-solid fa-link"></i> Buka Link Drive ↗</a>` : ''}
           </td>
-          <td class="p-2.5 text-center">
-            <button onclick="openSnp8Modal('${item.kode}')" class="px-2.5 py-1.5 rounded-lg ${hasMonev ? 'bg-teal-700 text-white' : 'bg-slate-800 text-white'} hover:bg-teal-800 text-[11px] font-semibold">
+          <td class="p-2.5 text-center space-y-1">
+            <button onclick="openSnp8Modal('${item.kode}')" class="w-full px-2.5 py-1.5 rounded-lg ${hasMonev ? 'bg-teal-700 text-white' : 'bg-slate-800 text-white'} hover:bg-teal-800 text-[11px] font-semibold">
               <i class="fa-solid fa-pen-to-square mr-1"></i>${hasMonev ? 'Monev ✓' : 'Isi Monev'}
             </button>
+            ${item.isCustom ? `<button onclick="deleteCustomSnp8('${item.kode}')" class="w-full text-[10px] text-rose-600 hover:underline font-semibold">Hapus Kustom</button>` : ''}
           </td>
         </tr>`;
       }).join('') : `<tr><td colspan="6" class="p-6 text-center text-slate-500 italic">Tidak ada indikator 8 SNP yang sesuai dengan filter pencarian.</td></tr>`;
@@ -3242,11 +3590,11 @@
 
     function generateSnp8AiSummary() {
       initSnp8Records();
-      const total = SNP8_MASTER_LIST.length;
-      const selesai = SNP8_MASTER_LIST.filter(x => appData.snp8Records[x.kode].status === 'Selesai');
-      const proses = SNP8_MASTER_LIST.filter(x => appData.snp8Records[x.kode].status === 'Dalam Proses');
-      const rtl = SNP8_MASTER_LIST.filter(x => appData.snp8Records[x.kode].status === 'Perlu Tindak Lanjut');
-      const belum = SNP8_MASTER_LIST.filter(x => appData.snp8Records[x.kode].status === 'Belum Dilaksanakan');
+      const total = getAllSnp8List().length;
+      const selesai = getAllSnp8List().filter(x => appData.snp8Records[x.kode].status === 'Selesai');
+      const proses = getAllSnp8List().filter(x => appData.snp8Records[x.kode].status === 'Dalam Proses');
+      const rtl = getAllSnp8List().filter(x => appData.snp8Records[x.kode].status === 'Perlu Tindak Lanjut');
+      const belum = getAllSnp8List().filter(x => appData.snp8Records[x.kode].status === 'Belum Dilaksanakan');
       const pct = ((selesai.length / total) * 100).toFixed(1);
 
       const rtlList = rtl.length ? rtl.map(x => `<strong>${x.kode}</strong> (${x.kegiatan})`).join(', ') : 'Tidak ada indikator kritis.';
@@ -3261,7 +3609,7 @@
 
     function buildSnp8ExportTableHtml() {
       initSnp8Records();
-      const rows = SNP8_MASTER_LIST.map((item, idx) => {
+      const rows = getAllSnp8List().map((item, idx) => {
         const r = appData.snp8Records[item.kode];
         return `<tr>
           <td>${idx + 1}</td>
@@ -3272,7 +3620,7 @@
           <td>${r.jadwal} (${r.semester})</td>
           <td>${r.status}</td>
           <td>${r.tglRealisasi || '-'}</td>
-          <td>${r.lampiranFile || r.bukti}</td>
+          <td>${r.lampiranFile || r.bukti}${r.linkBukti ? ' (' + r.linkBukti + ')' : ''}</td>
           <td>${r.uraian || '-'}</td>
           <td>${r.monev || '-'}</td>
           <td>${r.evaluasi || '-'}</td>
